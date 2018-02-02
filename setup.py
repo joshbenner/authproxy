@@ -3,6 +3,9 @@ from setuptools import setup
 
 setup(
     name='authproxy',
+    install_requires=[
+        'ldap3>=2.4,<3'
+    ],
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
     description='Authenticate against identity providers with HTTP requests.',
