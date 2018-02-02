@@ -123,11 +123,8 @@ class LDAPAuthBackend(AuthBackend):
                             ca_certs_path=self.config.ca_certs_dir)
         return ldap3.Server(self.url, use_ssl=use_ssl, tls=tls)
 
-    def _user_dn(self, username):
-        return self.config.ldap_user_pattern.format(username)
-
     def authenticate(self, username, password, constraints):
-        user_dn = self._user_dn(username)
+        user_dn = self.config.ldap_user_pattern.format(username)
         try:
             conn = ldap3.Connection(self._ldap_server(), user_dn, password,
                                     auto_bind=True)
