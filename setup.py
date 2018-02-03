@@ -1,5 +1,11 @@
+from os import path
+
 from setuptools import setup
 
+here = path.abspath(path.dirname(__file__))
+
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='httpauthproxy',
@@ -9,6 +15,7 @@ setup(
     setup_requires=['setuptools_scm'],
     use_scm_version=True,
     description='Authenticate against identity providers with HTTP requests.',
+    long_description=long_description,
     author='Josh Benner',
     author_email='josh@bennerweb.com',
     url='https://github.com/joshbenner/httpauthproxy',
