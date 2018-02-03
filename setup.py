@@ -11,6 +11,7 @@ setup(
     description='Authenticate against identity providers with HTTP requests.',
     author='Josh Benner',
     author_email='josh@bennerweb.com',
+    url='https://github.com/joshbenner/httpauthproxy',
     py_modules=['httpauthproxy'],
     entry_points={
         'console_scripts': [
@@ -18,6 +19,7 @@ setup(
         ]
     },
     license='MIT',
+    keywords=['nginx', 'ldap', 'authentication'],
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
