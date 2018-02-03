@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 setup(
-    name='authproxy',
+    name='httpauthproxy',
     install_requires=[
         'ldap3>=2.4,<3'
     ],
@@ -11,10 +11,10 @@ setup(
     description='Authenticate against identity providers with HTTP requests.',
     author='Josh Benner',
     author_email='josh@bennerweb.com',
-    py_modules=['authproxy'],
+    py_modules=['httpauthproxy'],
     entry_points={
         'console_scripts': [
-            'authproxy = authproxy:main'
+            'httpauthproxy = httpauthproxy:main'
         ]
     },
     license='MIT',
