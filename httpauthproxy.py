@@ -29,6 +29,7 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 class RequestHandler(BaseHTTPRequestHandler):
     backends = []
+    config = None
     _log_user = '-'
 
     def log_message(self, format, *args):
@@ -47,34 +48,43 @@ class RequestHandler(BaseHTTPRequestHandler):
                 headers.get('AuthProxy-Require-Groups'))
         }
 
+    def _try_auth(self, auth_header):
+        constraints = self._parse_constraints(self.headers)
+        if (auth_header is not None
+                and auth_header.lower().startswith('basic ')):
+            creds = base64.b64decode(auth_header[6:]).decode('utf-8')
+            username, password = creds.split(':', 1)
+            if constraints['require_users']:
+                if username.lower() not in constraints['require_users']:
+                    return False
+            for backend in self.backends:
+                if backend.authenticate(username, password, constraints):
+                    self._log_user = username
+                    return True
+
+    def _auth_prompt(self):
+        self.send_response(401)
+        realm = self.headers.get('AuthProxy-Realm', 'Please login')
+        self.send_header('WWW-Authenticate',
+                         'Basic realm="{}"'.format(realm))
+        self.send_header('Cache-Control', 'no-cache')
+
     def do_GET(self):
         try:
-            constraints = self._parse_constraints(self.headers)
             auth_header = self.headers.get('Authorization')
-            if (auth_header is not None
-                    and auth_header.lower().startswith('basic ')):
-                creds = base64.b64decode(auth_header[6:]).decode('utf-8')
-                username, password = creds.split(':', 1)
-                if constraints['require_users']:
-                    if username.lower() not in constraints['require_users']:
-                        self.send_response(403)
-                        self.end_headers()
-                        return
-                authenticated = False
-                for backend in self.backends:
-                    if backend.authenticate(username, password, constraints):
-                        authenticated = True
-                        self._log_user = username
-                        break
-                self.send_response(200 if authenticated else 403)
+            if (auth_header is None
+                    or not auth_header.lower().startswith('basic ')):
+                self._auth_prompt()
+            authorized = self._try_auth(auth_header)
+            if authorized:
+                self.send_response(200)
+            elif self.config.reauth:
+                self._auth_prompt()
             else:
-                self.send_response(401)
-                realm = self.headers.get('AuthProxy-Realm', 'Please login')
-                self.send_header('WWW-Authenticate',
-                                 'Basic realm="{}"'.format(realm))
-                self.send_header('Cache-Control', 'no-cache')
+                self.send_response(403)
             self.end_headers()
-        except Exception:
+        except Exception as e:
+            eprint(str(e))
             self.send_response(500)
             self.end_headers()
             raise
@@ -168,6 +178,8 @@ def arg_parser(backends):
     parser.add_argument('-u', '--url', dest='urls', metavar='URL',
                         action='append', required=True,
                         help='URL of auth server (multiple, required)')
+    parser.add_argument('-p', '--prompt', dest='reauth', action='store_true',
+                        help='Return 401 when unauthorized')
     parser.add_argument('--ca-certs-file', dest='ca_certs_file', metavar='',
                         help='Path to CA certs bundle file')
     parser.add_argument('--ca-certs-dir', dest='ca_certs_dir', metavar='',
@@ -200,6 +212,7 @@ def main():
     ip, port = args.bind.split(':')
     print('Listening on {}:{}'.format(ip, port))
     RequestHandler.backends = backends
+    RequestHandler.config = args
     server = ThreadedHTTPServer((ip, int(port)), RequestHandler)
     server.serve_forever()
 
