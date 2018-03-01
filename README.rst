@@ -13,8 +13,9 @@ Usage
 
 ::
 
-    usage: authproxy [-h] [-b BIND] -u URL [--ca-certs-file] [--ca-certs-dir]
-                     [--no-verify] [--ldap-user-pattern] [--ldap-member-attr]
+    usage: httpauthproxy.py [-h] [-b BIND] -u URL [-p] [--ca-certs-file]
+                            [--ca-certs-dir] [--no-verify] [--ldap-user-pattern]
+                            [--ldap-member-attr]
 
     Simple HTTP server to proxy authentication requests.
 
@@ -22,6 +23,7 @@ Usage
       -h, --help            show this help message and exit
       -b BIND, --bind BIND  IP:port to bind to (default: 127.0.0.1:8018)
       -u URL, --url URL     URL of auth server (multiple, required)
+      -p, --prompt          Return 401 when unauthorized
       --ca-certs-file       Path to CA certs bundle file
       --ca-certs-dir        Path to directory containing CA certs
       --no-verify           Skip TLS verification
